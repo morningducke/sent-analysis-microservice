@@ -35,7 +35,9 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run uvicorn
-      run: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
+      run: |
+        cd app
+        uvicorn app.main:app --host 0.0.0.0 --port 80 
     - name: Test with pytest
       run: |
         pytest
