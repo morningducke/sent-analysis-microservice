@@ -9,23 +9,23 @@ app = FastAPI()
 
 sentiment = pipeline(
     model="lxyuan/distilbert-base-multilingual-cased-sentiments-student", 
-    return_all_scores=True
+    top_k=1
 )
 
 r = redis.Redis(host="redis", port=6379)
-    
+
 @app.get("/is_cuda")
-def is_cuda():
-    return {"CUDA": torch.cuda.is_available()}
+def is_cuda() -> bool:
+    return torch.cuda.is_available()
 
 @app.post("/predict")
-def analyse(to_analyse: str) -> list[dict]:
+def analyse(to_analyse: str) -> dict:
     preds = sentiment(to_analyse)[0] 
     r.set(to_analyse, json.dumps(preds))
-    return preds
+    return preds[0]
 
 @app.get("/predict_history")
-def get_predict_history():
+def get_predict_history() -> list[dict]:
     keys = r.keys('*')
     all_strings = []
     for k in keys:
