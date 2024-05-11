@@ -1,6 +1,7 @@
 import torch
 import redis
 import json
+import os
 from transformers import pipeline
 from fastapi import FastAPI
 
@@ -12,7 +13,9 @@ sentiment = pipeline(
     top_k=1
 )
 
-r = redis.Redis(host="redis", port=6379)
+redis_url = os.getenv("REDIS_URL", "localhost")
+redis_port = os.getenv("REDIS_PORT", 6379)
+r = redis.Redis(host=redis_url, port=redis_port)
 
 @app.get("/is_cuda")
 def is_cuda() -> bool:
@@ -25,7 +28,7 @@ def analyse(to_analyse: str) -> dict:
     return preds[0]
 
 @app.get("/predict_history")
-def get_predict_history() -> list[dict]:
+def get_predict_history()  -> list[dict]:
     keys = r.keys('*')
     all_strings = []
     for k in keys:
