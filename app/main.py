@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
 from datetime import datetime, timezone
+from uuid import uuid4
 
 load_dotenv()
 
@@ -32,19 +33,20 @@ r = redis.Redis(host=redis_url, port=redis_port)
 
 start_date = datetime.now(timezone.utc)
 cur_version = os.getenv("VERSION")
+id = uuid4()
 
 @app.get("/is_cuda")
-def is_cuda() -> bool:
+async def is_cuda() -> bool:
     return torch.cuda.is_available()
 
 @app.post("/predict")
-def analyse(to_analyse: str) -> dict:
+async def analyse(to_analyse: str) -> dict:
     preds = sentiment(to_analyse)[0] 
     r.set(to_analyse, json.dumps(preds))
     return preds[0]
 
 @app.get("/predict_history")
-def get_predict_history() -> list[dict]:
+async def get_predict_history() -> list[dict]:
     keys = r.keys('*')
     all_strings = []
     for k in keys:
@@ -52,9 +54,11 @@ def get_predict_history() -> list[dict]:
     return all_strings
 
 @app.get("/stats")
-def get_stats() -> dict:
+async def get_stats() -> dict:
     return {
         "start_date" : start_date,
-        "version" : cur_version
+        "version" : cur_version,
+        "id" : id # unique id for load balancing test
     }
+
     
